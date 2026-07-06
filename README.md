@@ -1,9 +1,15 @@
 # Caderno de Expedição · Chuí → Montevidéu
 
-Planejador de equipamento para o cicloturismo solo Chuí (RS) → Montevidéu pela Ruta 10.
-Marque o que já tem, ajuste quantidades e preços, e acompanhe sua **prontidão** avançar de Chuí a Montevidéu.
+Companheiro de planejamento para o cicloturismo solo Chuí (RS) → Montevidéu pela Ruta 10.
+São três páginas, acessíveis pelas abas no topo:
+
+- **Equipamento** — marque o que já tem, ajuste quantidades e preços, veja o quanto falta comprar e sua prontidão avançar de Chuí a Montevidéu.
+- **Organização** — as quatro frentes de preparação (equipamento, treino físico, logística e pré-partida), com metas que você conclui e acompanha.
+- **Mapa & Rota** — mapa de trecho da costa com distâncias, o que há em cada parada e onde NÃO há serviço, mais seus pontos de interesse.
 
 **Funciona 100% offline.** Seus dados ficam salvos no próprio aparelho.
+
+> Este app é o painel **estratégico**. A navegação real na estrada é de um app de mapas offline (OsmAnd / Maps.me). Nunca dependa de um único instrumento.
 
 ---
 
