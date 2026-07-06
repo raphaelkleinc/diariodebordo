@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuí → Montevidéu · Caderno de Expedição</title>
+<meta name="description" content="Planejador de equipamento para cicloturismo Chuí–Montevidéu. Funciona offline.">
+<meta name="theme-color" content="#12332e">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+:root{--ink:#153e37;--ink2:#0f3a34;--sand:#e7e0cf;--paper:#f8f4ea;--paper2:#fffdf7;--accent:#d97514;--accent2:#b85f0d;--ok:#3a7a5c;--text:#22271e;--muted:#726a58;--warn:#b26a00;--line:#d9d0ba;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--sand);}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--text);}
+.wrap{max-width:860px;margin:0 auto;min-height:100vh;background:var(--sand);}
+.mono{font-family:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,monospace;}
+.loading{padding:60px 24px;text-align:center;color:var(--muted);font-style:italic;}
+
+.hd{position:relative;background:linear-gradient(160deg,#1b463f,#12332e);color:#f3efe2;overflow:hidden;}
+.contours{position:absolute;inset:0;width:100%;height:100%;}
+.hd-in{position:relative;padding:26px 24px 22px;}
+.eyebrow{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c9b78a;margin-bottom:8px;}
+.hd h1{margin:0;font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.hd h1 .arrow{color:var(--accent);font-weight:400;padding:0 4px;}
+.sub{margin:8px 0 0;color:#b9c4bd;font-size:13px;}
+.route{margin-top:22px;}
+.route-labels{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.05em;color:#a9b8b0;margin-bottom:7px;text-transform:uppercase;}
+.route-track{position:relative;height:4px;background:rgba(255,255,255,.14);border-radius:3px;margin:10px 6px;}
+.route-fill{position:absolute;left:0;top:0;height:100%;background:var(--accent);border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.wp{position:absolute;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#3a5750;border:1px solid #12332e;transition:background .3s;}
+.wp.on{background:var(--accent);}
+.rider{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:left .5s cubic-bezier(.4,0,.2,1);}
+.route-status{font-size:12.5px;color:#cdd6cf;margin-top:12px;}
+.route-status b{color:#fff;}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line);}
+.stat{background:var(--paper);padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stat-k{font-size:11px;color:var(--muted);}
+.stat-v{font-family:ui-monospace,monospace;font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.stat-v.accent{color:var(--accent2);}
+.stat-v.ok{color:var(--ok);}
+.stat-v .frac{font-size:14px;color:var(--muted);font-weight:500;}
+
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:14px 16px 4px;}
+.mo{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 6px;text-align:center;}
+.mo.done{background:#eaf1e9;border-color:#cfe0cd;}
+.mo-m{display:block;font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);letter-spacing:.06em;}
+.mo-v{display:block;font-size:13px;font-weight:700;margin-top:3px;}
+.mo.done .mo-v{color:var(--ok);}
+
+.controls{display:flex;gap:10px;padding:12px 16px;flex-wrap:wrap;align-items:center;}
+.search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:0 10px;color:var(--muted);}
+.search input{flex:1;border:none;background:none;padding:10px 0;font-size:14px;color:var(--text);outline:none;font-family:inherit;}
+.search .clear{border:none;background:none;color:var(--muted);cursor:pointer;display:flex;padding:2px;}
+.seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;}
+.seg button{border:none;background:none;padding:7px 12px;font-size:12.5px;color:var(--muted);cursor:pointer;border-radius:6px;font-family:inherit;white-space:nowrap;}
+.seg button.on{background:var(--ink);color:#f3efe2;font-weight:600;}
+
+.cats{display:flex;gap:7px;padding:4px 16px 14px;overflow-x:auto;}
+.cats button{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);padding:7px 12px;border-radius:20px;font-size:12.5px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:7px;font-family:inherit;transition:all .15s;}
+.cats button:hover{border-color:#b9ab8a;}
+.cats button.on{background:var(--ink);color:#f3efe2;border-color:var(--ink);}
+.cn{font-family:ui-monospace,monospace;font-size:11px;opacity:.6;}
+.cats button.on .cn{color:var(--accent);opacity:1;}
+
+.list{padding:0 16px;}
+.grp{margin-bottom:20px;}
+.grp-hd{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px 2px;border-bottom:1.5px solid var(--ink);margin-bottom:10px;}
+.grp-n{font-family:ui-monospace,monospace;color:var(--accent2);}
+.grp-ct{margin-left:auto;font-family:ui-monospace,monospace;letter-spacing:0;color:var(--ink);}
+
+.card{display:flex;gap:12px;background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:9px;transition:opacity .2s,background .2s;}
+.card.owned{background:#f1f4ee;opacity:.72;}
+.card.owned .nm{text-decoration:line-through;text-decoration-color:var(--muted);}
+.tick{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:2px solid #c3b995;background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;margin-top:2px;transition:all .15s;padding:0;}
+.tick:hover{border-color:var(--ok);}
+.tick.on{background:var(--ok);border-color:var(--ok);}
+.tick svg{opacity:0;}
+.tick.on svg{opacity:1;}
+
+.card-main{flex:1;min-width:0;}
+.card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.nm{font-weight:650;font-size:15px;letter-spacing:-.01em;}
+.tag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;}
+.tag.warn{background:#fbecd0;color:var(--warn);}
+.tag.muted{background:#eee9dc;color:var(--muted);}
+.mdl{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.spec{color:#9a917d;}
+.why{margin-top:7px;border:none;background:none;color:var(--accent2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-family:inherit;font-weight:600;}
+.chev{transition:transform .2s;}
+.why.open .chev{transform:rotate(180deg);}
+.note{margin-top:8px;font-size:12.5px;line-height:1.55;color:#4a4636;background:#f3eede;border-left:2px solid var(--accent);padding:9px 11px;border-radius:0 7px 7px 0;display:none;}
+.note.open{display:block;}
+
+.card-right{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:118px;}
+.fields{display:flex;gap:6px;}
+.fld{display:flex;flex-direction:column;gap:2px;}
+.fld span{font-size:9px;color:var(--muted);text-align:center;letter-spacing:.05em;text-transform:uppercase;}
+.fld input{width:44px;padding:5px 4px;border:1px solid var(--line);border-radius:7px;text-align:center;font-size:13px;font-family:ui-monospace,monospace;background:var(--paper);color:var(--text);outline:none;}
+.fld.price input{width:58px;}
+.fld input:focus{border-color:var(--accent);}
+.sub-row{display:flex;align-items:center;gap:8px;}
+.mo-badge{font-family:ui-monospace,monospace;font-size:11px;background:#eee9dc;color:var(--muted);padding:2px 7px;border-radius:6px;letter-spacing:.03em;}
+.line-total{font-weight:700;font-size:14px;font-family:ui-monospace,monospace;}
+.del{border:none;background:none;color:#b9ab8a;cursor:pointer;padding:2px;display:flex;transition:color .15s;}
+.del:hover{color:#c0392b;}
+.del-confirm{display:flex;gap:5px;}
+.del-yes{border:none;background:#c0392b;color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600;}
+.del-no{border:1px solid var(--line);background:none;color:var(--muted);font-size:11px;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:inherit;}
+
+.empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:14px;}
+.link{border:none;background:none;color:var(--accent2);cursor:pointer;font:inherit;text-decoration:underline;padding:0;}
+
+.footer-actions{padding:8px 16px 0;display:flex;flex-direction:column;gap:12px;}
+.btn{border:1px solid var(--line);background:var(--paper);padding:10px 16px;border-radius:9px;font-size:13.5px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;color:var(--text);transition:all .15s;}
+.btn:hover{border-color:#b9ab8a;}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+.btn.primary:hover{background:var(--accent2);}
+.btn.ghost{background:none;color:var(--muted);}
+.btn.danger{background:#c0392b;border-color:#c0392b;color:#fff;font-weight:600;}
+.add-open{width:100%;justify-content:center;border-style:dashed;}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.tools .btn{font-size:12px;padding:7px 12px;}
+
+.add-panel{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.add-row{display:flex;gap:8px;flex-wrap:wrap;}
+.add-panel input,.add-panel select{padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;background:var(--paper);color:var(--text);outline:none;}
+.add-panel input:focus,.add-panel select:focus{border-color:var(--accent);}
+.add-name{flex:1;min-width:150px;}
+.add-model{flex:1;min-width:150px;}
+.add-num{width:78px;}
+.add-btns{display:flex;gap:8px;}
+.reset-confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+.disclaimer{text-align:center;font-size:11.5px;color:var(--muted);padding:16px 24px 34px;line-height:1.5;}
+.offline-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:ui-monospace,monospace;letter-spacing:.05em;color:#8fa89f;text-transform:uppercase;margin-top:10px;}
+.dot{width:6px;height:6px;border-radius:50%;background:#4f7a6b;}
+
+@media (max-width:620px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .months{grid-template-columns:repeat(3,1fr);}
+  .hd h1{font-size:27px;}
+  .card{flex-wrap:wrap;}
+  .card-right{width:100%;min-width:0;flex-direction:row;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="loading">Abrindo o caderno de expedição…</div></div>
+<input type="file" id="importFile" accept="application/json,.json" style="display:none">
+
+<script>
+"use strict";
+const KEY="expedicao_gear_v2";
+const CATS=[
+ {id:"carga",n:"01",label:"Carga & Bikepacking"},
+ {id:"dormida",n:"02",label:"Sistema de Dormida"},
+ {id:"cozinha",n:"03",label:"Cozinha & Hidratação"},
+ {id:"ferramentas",n:"04",label:"Ferramentas & Manutenção"},
+ {id:"vestuario",n:"05",label:"Vestuário"},
+ {id:"seguranca",n:"06",label:"Segurança & Eletrônicos"},
+ {id:"higiene",n:"07",label:"Higiene & Saúde"},
+ {id:"documentos",n:"08",label:"Documentos & Consumíveis"},
+];
+const MONTHS=["Jul","Ago","Set","Out","Nov","Dez"];
+const WAYPOINTS=["Chuí","Santa Teresa","Punta del Diablo","Cabo Polonio","La Paloma","Laguna Garzón","José Ignacio","Punta del Este","Piriápolis","Montevidéu"];
+let _uid=0; const uid=()=>"i"+Date.now().toString(36)+(_uid++);
+
+const RAW=[
+["carga","Rack traseiro","Ibera PakRak IB-RA5 (disc)","Suporta 25kg, alumínio",1,"Jul",320,false,"Base de toda a capacidade de carga. A versão disc libera o cáliper do freio. 25kg cobre folgado sua carga real (~15–18kg).",true],
+["carga","Alforjes traseiros (par)","Rhinowalk 27L quick-release","~13–14L cada, roll-top",1,"Jul",450,false,"Roll-top veda de verdade contra chuva e poeira do ripio. Confirmar na foto: fechamento roll-top (não zíper) e retenção anti-bounce.",false],
+["carga","Bolsa de guidão","Rhinowalk 3–5L","Acesso rápido",1,"Set",180,false,"Lanche, celular e documento à mão sem parar e abrir alforje. Reduz paradas.",false],
+["carga","Bolsa de quadro","Rhinowalk frame bag","2–4L, itens pesados",1,"Set",180,false,"Peso baixo e central melhora a estabilidade e reduz a sensação de leme pesado na direção.",false],
+["carga","Bolsa de top tube","Genérica","~0,8L",1,"Set",100,false,"Energia acessível sem tirar as mãos do guidão.",false],
+["carga","Bolsa de selim","Média","~1L, kit reparo",1,"Set",90,false,"Isola o kit de reparo do resto — redundância se um alforje molhar ou sumir.",false],
+["dormida","Barraca","Naturehike Cloud Up 2","2P, coluna 3000mm+, ~1,5kg",1,"Set",900,false,"2P para 1 ciclista = espaço p/ bagagem dentro. O fator crítico na costa é o vento: bons estais e estacas firmes. Monte 2–3x em casa antes.",false],
+["dormida","Saco de dormir","Nautika Viper (sintético)","Conforto 8–10°C",1,"Out",350,false,"Sintético e não pluma: o ar salino/úmido da costa destrói a pluma molhada. Sintético isola mesmo úmido e seca rápido.",false],
+["dormida","Isolante térmico","Naturehike inflável (R~2)","R-value ~2, 400–600g",1,"Out",300,false,"O frio que rouba calor vem do chão, não do ar. R2 sobra p/ verão. Kit de reparo incluso p/ o risco de furo.",false],
+["dormida","Travesseiro inflável","Naturehike / Trekology","~60g",1,"Out",100,false,"Sono ruim por 6 dias vira fadiga acumulada. Custo/benefício alto; alternativa R$0 é saco com roupas.",false],
+["cozinha","Fogareiro","Fire Maple FMS-300T","Gás isobutano ~60g",1,"Nov",180,false,"Gás é rápido e limpo, mas cartucho pode faltar no Rocha. Compre com antecedência. Álcool é o backup (combustível se acha em qualquer lugar).",false],
+["cozinha","Cartucho de gás","Isobutano 230g","230g",2,"Dez",55,false,"Leve 2 pela dificuldade de reposição na rota. Não vai em transporte pressurizado — compra local.",false],
+["cozinha","Panela / cook set","Fire Maple 1L","0,75–1L com tampa",1,"Nov",180,false,"1L cobre refeição + água quente. Tampa que vira prato economiza peso.",false],
+["cozinha","Filtro de água","Sawyer Squeeze","0,1 micron",1,"Nov",320,false,"CRÍTICO: os ~60km de ripio da Laguna Garzón não têm serviço. O filtro te dá independência de fonte e reduz o peso de água a carregar.",false],
+["cozinha","Reservatório flexível","Bolsa 2–3L","2–3L",1,"Nov",150,false,"No trecho seco precisa de 4–5L totais. Reservatório + caramanholas cobrem.",false],
+["cozinha","Caramanholas","Garrafa 750ml","750ml",2,"Nov",25,false,"Acesso rápido pedalando; complementa o reservatório.",false],
+["cozinha","Utensílios / ignição","Spork + canivete + isqueiro","Kit",1,"Nov",80,false,"Isqueiro + fósforo à prova d'água = redundância de fogo. Dois é um, um é nenhum.",false],
+["ferramentas","Multiferramenta","Topeak Hexus / CB M19","Allen, Torx, extrator de corrente",1,"Nov",180,false,"Sem extrator de corrente você fica a pé numa quebra. Não-negociável. Teste as chaves na sua bike antes.",false],
+["ferramentas","Bomba","Lezyne / Topeak alta pressão","Com manômetro",1,"Nov",200,false,"Tubeless precisa de volume p/ reassentar. Bomba manual > CO2 em viagem longa (CO2 acaba).",false],
+["ferramentas","Kit reparo tubeless","Aplicador + plugs","Plugs de borracha",1,"Nov",120,false,"Furo médio precisa de plug. Sem ele, só abrindo o pneu e pondo câmara. Treine o plug uma vez em casa.",false],
+["ferramentas","Selante reserva","Stan's / Vittoria","Frasco 250ml",1,"Dez",90,false,"Repor no trecho e na recarga de dezembro. Selante seca no calor.",false],
+["ferramentas","Câmaras reserva","Câmara 700x35–43c","p/ seus 700x37c",2,"Nov",45,false,"Backup catastrófico: rasgo grande que o plug não resolve → põe câmara e segue. Mesmo tubeless, sempre 2.",false],
+["ferramentas","Kit remendos + espátulas","Cola + espátulas","—",1,"Nov",40,false,"Conserta a câmara reserva se ela furar também. Redundância barata.",false],
+["ferramentas","Corrente + óleo","Quick-link + óleo","Quick-link do padrão Tiagra",1,"Nov",70,false,"Quick-link salva uma corrente quebrada em minutos. Óleo p/ relubrificar após poeira/chuva do ripio.",false],
+["ferramentas","Kit improviso","Parafusos, zip ties, fita, arame","Sortido",1,"Nov",40,false,"Zip tie e arame resolvem 80% dos imprevistos leves: rack solto, para-lama, suporte trincado.",false],
+["vestuario","Bretelle c/ forro","Bib de qualidade média","Forro anatômico",2,"Dez",250,false,"O forro decide se os dias 4–5–6 são toleráveis. 2 unidades p/ alternar. Teste num treino longo antes.",false],
+["vestuario","Camisa de ciclismo","Respirável c/ bolsos","Dry-fit",2,"Dez",150,false,"Bolsos traseiros p/ acesso; cores claras/refletivas p/ visibilidade.",false],
+["vestuario","Corta-vento / capa de chuva","Jaqueta impermeável compacta","Compacta",1,"Dez",200,false,"Costa = vento constante e pancadas de verão. Que caiba na bolsa de guidão p/ acesso imediato.",false],
+["vestuario","Luvas","Luva de ciclismo","—",1,"Dez",80,false,"Absorve a vibração do ripio (fadiga de mão) e protege a palma em queda.",false],
+["vestuario","Manguito UV","Manguito solar","UPF alto",1,"Dez",70,false,"Manhãs frescas e proteção solar sem passar creme o dia todo. Perneira é dispensável no verão.",false],
+["vestuario","Roupa de camping","Conjunto leve seca-rápido","Leve",1,"Dez",150,false,"Molhado para pedalar, seco para dormir. Nunca dormir com roupa suada.",false],
+["vestuario","Sandália / chinelo","Resistente","—",1,"Dez",80,false,"Descanso dos pés, banho de camping, atravessar água.",false],
+["vestuario","Buff UV","Gola tubular","UPF",2,"Dez",30,false,"Pescoço, cabeça, filtro de poeira no ripio. Sol costeiro é agressivo.",false],
+["vestuario","Óculos de sol","UV esportivo","Proteção UV",1,"Dez",150,false,"Poeira + sol intenso. Proteção ocular é segurança, não estética.",false],
+["seguranca","Capacete","Ventilado certificado","CE / CPSC",1,"Ago",250,false,"Inegociável. Se já tem um bom (sem impacto prévio, <5 anos), confirme e economize.",true],
+["seguranca","Espelho retrovisor","De guidão","—",1,"Ago",60,false,"Solo em rodovia: ver o que vem atrás sem tirar a linha é segurança real.",false],
+["seguranca","Powerbank","20.000 mAh","20Ah",1,"Nov",250,false,"Recarrega XOSS, celular/GPS e luzes por dias. Carregar 100% antes de cada trecho sem serviço.",false],
+["seguranca","Suporte celular/GPS","Suporte de guidão robusto","Universal",1,"Set",80,false,"Baixe mapas offline (OsmAnd). O cruzamento da Laguna Garzón pede mapa à vista.",false],
+["seguranca","Cabos + adaptador UY","Kit + adaptador tomada","Padrão UY",1,"Dez",60,false,"Uruguai tem padrões de tomada que variam. Adaptador evita ficar sem recarga.",false],
+["seguranca","Apito de emergência","Pealess alto","—",1,"Nov",20,false,"Sinalização em emergência a custo irrisório.",false],
+["seguranca","GPS dedicado (opcional)","Garmin eTrex / Edge","—",0,"Opc",800,false,"Celular cobre a navegação. Só se quiser redundância e bateria independente. Opcional — não soma se qtd 0.",false],
+["higiene","Kit primeiros socorros","Compacto de trilha","Curativos, antisséptico, remédios",1,"Nov",120,false,"Solo = você é o primeiro socorro. Inclua o que trata assadura, corte e alergia. Leve seus remédios pessoais.",false],
+["higiene","Protetor solar","FPS 50+ resistente à água","FPS 50+",2,"Dez",40,false,"6h+/dia de exposição. Queimadura compromete a viagem toda. Reaplicar sempre.",false],
+["higiene","Repelente","Icaridina","—",1,"Dez",40,false,"Lagoas e mata costeira = mosquito ao entardecer no camping.",false],
+["higiene","Creme antiassadura","Chamois cream","—",1,"Dez",60,false,"Atrito repetido do selim. Prevenção é o que te mantém pedalando no dia 5. Aplicar todo dia.",false],
+["higiene","Kit higiene","Escova, sabonete biodegradável, toalha rápida","—",1,"Dez",100,false,"Sabonete biodegradável = Leave No Trace. Toalha de microfibra seca rápido.",false],
+["higiene","Álcool gel / lenços","Gel + lenços","—",1,"Dez",30,false,"Higiene das mãos antes de comer sem acesso a água.",false],
+["documentos","Documento de viagem","Passaporte OU RG válido","Dentro da validade",1,"Ago",0,false,"A fronteira do Chuí exige carimbo nos dois postos (saída BR + entrada UY) antes de seguir. Sem ele, problema na volta.",true],
+["documentos","Seguro viagem","Cobertura UY + prática esportiva","Resgate/repatriação",1,"Dez",150,false,"Acidente solo sem seguro = risco financeiro alto. Ler a cláusula de prática esportiva.",false],
+["documentos","Dinheiro","Pesos em espécie + cartão","—",1,"Dez",0,false,"Cidades pequenas do Rocha nem sempre têm câmbio/ATM. Leve pesos p/ camping e mercadinhos.",false],
+["documentos","Cópias de documentos","Física + digital na nuvem","—",1,"Dez",0,false,"Redundância se perder os originais. Foto no celular + cópia guardada separada.",false],
+["documentos","Comida de trilha","Barras, gel, eletrólitos","Reposição",1,"Dez",150,false,"Reposição no trecho sem serviços. Eletrólitos previnem cãibra no calor.",false],
+];
+const seed=()=>RAW.map(r=>({id:uid(),category:r[0],name:r[1],model:r[2],spec:r[3],qty:r[4],month:r[5],price:r[6],owned:r[7],notes:r[8],verify:r[9]||false}));
+
+const ICON={
+ check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+ plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+ trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+ chev:'<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+ search:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+ x:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+ warn:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+ reset:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+ down:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+ up:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+};
+
+const brl=n=>"R$ "+Math.round(n).toLocaleString("pt-BR");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let state={items:load(),cat:"all",status:"all",query:"",adding:false,confirmDel:null,confirmReset:false};
+
+function load(){
+ try{const raw=localStorage.getItem(KEY);if(raw){const a=JSON.parse(raw);if(Array.isArray(a)&&a.length)return a.map(x=>({...x,id:x.id||uid()}));}}catch(e){}
+ const s=seed();save(s);return s;
+}
+function save(items){try{localStorage.setItem(KEY,JSON.stringify(items||state.items));}catch(e){}}
+
+function totals(){
+ const it=state.items;
+ const real=it.filter(i=>i.qty>0);
+ const ownedCount=real.filter(i=>i.owned).length;
+ const pct=real.length?ownedCount/real.length:0;
+ return{
+  totalCount:real.length,ownedCount,pct,
+  toBuy:it.filter(i=>!i.owned).reduce((s,i)=>s+i.price*i.qty,0),
+  ownedVal:it.filter(i=>i.owned).reduce((s,i)=>s+i.price*i.qty,0),
+  grand:it.reduce((s,i)=>s+i.price*i.qty,0),
+ };
+}
+
+function shell(){
+ return `
+ <header class="hd">
+  <svg class="contours" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+   ${[0,1,2,3,4,5].map(k=>`<path d="M -20 ${40+k*26} C 160 ${10+k*26}, 300 ${80+k*22}, 460 ${44+k*26} S 720 ${16+k*26}, 820 ${52+k*26}" fill="none" stroke="#0f3a34" stroke-opacity="0.14" stroke-width="1"/>`).join("")}
+  </svg>
+  <div class="hd-in">
+   <div class="eyebrow">Caderno de expedição · gravel solo</div>
+   <h1>Chuí <span class="arrow">→</span> Montevidéu</h1>
+   <p class="sub">Ruta 10 costeira · ~6 dias · partida em janeiro</p>
+   <div class="route">
+    <div class="route-labels"><span>Chuí</span><span>Montevidéu</span></div>
+    <div class="route-track">
+     <div class="route-fill" id="routeFill"></div>
+     <div id="wps"></div>
+     <div class="rider" id="rider"></div>
+    </div>
+    <div class="route-status" id="routeStatus"></div>
+    <div class="offline-badge"><span class="dot"></span> Funciona offline · dados salvos neste aparelho</div>
+   </div>
+  </div>
+ </header>
+ <section class="stats" id="stats"></section>
+ <section class="months" id="months"></section>
+ <section class="controls">
+  <div class="search">${ICON.search}<input id="search" type="text" placeholder="Buscar item ou modelo…" value="${esc(state.query)}"><button class="clear" data-action="clear-search" aria-label="Limpar" style="${state.query?"":"display:none"}">${ICON.x}</button></div>
+  <div class="seg" id="seg"></div>
+ </section>
+ <nav class="cats" id="cats"></nav>
+ <div class="list" id="list"></div>
+ <div class="footer-actions" id="footer"></div>
+ <p class="disclaimer">Preços são estimativas de mercado brasileiro — ajuste conforme cotar. Faça um <b>backup</b> (Exportar) de tempos em tempos: os dados vivem só neste aparelho.</p>`;
+}
+
+function renderSummary(){
+ const t=totals();
+ document.getElementById("stats").innerHTML=`
+  <div class="stat"><span class="stat-k">Falta comprar</span><span class="stat-v accent">${brl(t.toBuy)}</span></div>
+  <div class="stat"><span class="stat-k">Já tenho (valor)</span><span class="stat-v ok">${brl(t.ownedVal)}</span></div>
+  <div class="stat"><span class="stat-k">Investimento total</span><span class="stat-v">${brl(t.grand)}</span></div>
+  <div class="stat"><span class="stat-k">Itens adquiridos</span><span class="stat-v">${t.ownedCount}<span class="frac">/${t.totalCount}</span></span></div>`;
+ const ms=MONTHS.map(m=>({m,val:state.items.filter(i=>!i.owned&&i.month===m).reduce((s,i)=>s+i.price*i.qty,0)}));
+ document.getElementById("months").innerHTML=ms.map(({m,val})=>`<div class="mo${val===0?" done":""}"><span class="mo-m">${m}</span><span class="mo-v">${val===0?"ok":brl(val)}</span></div>`).join("");
+ const fill=document.getElementById("routeFill");fill.style.width=(t.pct*100)+"%";
+ document.getElementById("rider").style.left=(t.pct*100)+"%";
+ document.getElementById("wps").innerHTML=WAYPOINTS.map((w,i)=>{const p=i/(WAYPOINTS.length-1);return `<div class="wp${p<=t.pct?" on":""}" style="left:${p*100}%" title="${esc(w)}"></div>`;}).join("");
+ const wpIdx=Math.min(WAYPOINTS.length-1,Math.round(t.pct*(WAYPOINTS.length-1)));
+ document.getElementById("routeStatus").innerHTML=`Prontidão <b>${Math.round(t.pct*100)}%</b> — ${t.ownedCount} de ${t.totalCount} itens · você está na altura de <b>${esc(WAYPOINTS[wpIdx])}</b>`;
+}
+
+function renderNavs(){
+ document.getElementById("seg").innerHTML=[["all","Tudo"],["buy","Preciso comprar"],["have","Já tenho"]].map(([k,l])=>`<button class="${state.status===k?"on":""}" data-action="status" data-status="${k}">${l}</button>`).join("");
+ document.getElementById("cats").innerHTML=`<button class="${state.cat==="all"?"on":""}" data-action="cat" data-cat="all">Todas</button>`+CATS.map(c=>`<button class="${state.cat===c.id?"on":""}" data-action="cat" data-cat="${c.id}"><span class="cn">${c.n}</span>${c.label}</button>`).join("");
+}
+
+function filtered(){
+ const q=state.query.trim().toLowerCase();
+ return state.items.filter(i=>{
+  if(state.cat!=="all"&&i.category!==state.cat)return false;
+  if(state.status==="buy"&&i.owned)return false;
+  if(state.status==="have"&&!i.owned)return false;
+  if(q&&!(i.name.toLowerCase().includes(q)||(i.model||"").toLowerCase().includes(q)))return false;
+  return true;
+ });
+}
+
+function cardHTML(it){
+ return `<div class="card${it.owned?" owned":""}" data-id="${it.id}">
+  <button class="tick${it.owned?" on":""}" data-action="toggle" data-id="${it.id}" aria-label="Marcar já tenho">${ICON.check}</button>
+  <div class="card-main">
+   <div class="card-top"><span class="nm">${esc(it.name)}</span>${it.verify&&!it.owned?`<span class="tag warn">${ICON.warn} verificar</span>`:""}${it.qty===0?`<span class="tag muted">opcional</span>`:""}</div>
+   <div class="mdl">${esc(it.model)}${it.spec&&it.spec!=="—"?`<span class="spec"> · ${esc(it.spec)}</span>`:""}</div>
+   ${it.notes?`<button class="why" data-action="why" data-id="${it.id}">${ICON.chev} por que levar</button><div class="note" data-note="${it.id}">${esc(it.notes)}</div>`:""}
+  </div>
+  <div class="card-right">
+   <div class="fields">
+    <label class="fld"><span>qtd</span><input type="number" min="0" inputmode="numeric" value="${it.qty}" data-field="qty" data-id="${it.id}"></label>
+    <label class="fld price"><span>R$/un</span><input type="number" min="0" inputmode="numeric" value="${it.price}" data-field="price" data-id="${it.id}"></label>
+   </div>
+   <div class="sub-row"><span class="mo-badge">${esc(it.month)}</span><span class="line-total">${brl(it.price*it.qty)}</span></div>
+   ${state.confirmDel===it.id?`<div class="del-confirm"><button class="del-yes" data-action="del-yes" data-id="${it.id}">remover</button><button class="del-no" data-action="del-no">cancelar</button></div>`:`<button class="del" data-action="del" data-id="${it.id}" aria-label="Remover">${ICON.trash}</button>`}
+  </div>
+ </div>`;
+}
+
+function renderList(){
+ const items=filtered();
+ const el=document.getElementById("list");
+ if(!items.length){el.innerHTML=`<div class="empty">Nada aqui com esse filtro. <button class="link" data-action="clear-filters">Limpar filtros</button>.</div>`;return;}
+ const groups=CATS.map(c=>({c,list:items.filter(i=>i.category===c.id)})).filter(g=>g.list.length);
+ el.innerHTML=groups.map(({c,list})=>`<div class="grp"><div class="grp-hd"><span class="grp-n">${c.n}</span>${c.label}<span class="grp-ct">${list.filter(i=>i.owned).length}/${list.length}</span></div>${list.map(cardHTML).join("")}</div>`).join("");
+}
+
+function renderFooter(){
+ const f=document.getElementById("footer");
+ const add=state.adding?`<div class="add-panel">
+   <div class="add-row"><input class="add-name" id="d-name" placeholder="Nome do item"><input class="add-model" id="d-model" placeholder="Modelo (opcional)"></div>
+   <div class="add-row">
+    <select id="d-cat">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join("")}</select>
+    <select id="d-month">${MONTHS.map(m=>`<option value="${m}">${m}</option>`).join("")}</select>
+    <input class="add-num" id="d-qty" type="number" min="0" placeholder="qtd" value="1">
+    <input class="add-num" id="d-price" type="number" min="0" placeholder="R$">
+   </div>
+   <div class="add-btns"><button class="btn primary" data-action="add-save">${ICON.plus} Adicionar</button><button class="btn ghost" data-action="add-cancel">Cancelar</button></div>
+  </div>`:`<button class="btn add-open" data-action="add-open">${ICON.plus} Adicionar item</button>`;
+ const reset=state.confirmReset?`<div class="reset-confirm"><span>Restaurar a lista original? Isso apaga suas alterações.</span><button class="btn danger" data-action="reset-yes">Restaurar</button><button class="btn ghost" data-action="reset-no">Não</button></div>`:`<button class="btn ghost reset" data-action="reset-open">${ICON.reset} Restaurar lista original</button>`;
+ f.innerHTML=`${add}<div class="tools"><button class="btn" data-action="export">${ICON.down} Exportar backup</button><button class="btn" data-action="import">${ICON.up} Importar backup</button></div>${reset}`;
+}
+
+function refresh(){renderSummary();renderNavs();renderList();renderFooter();}
+
+function setItems(next){state.items=next;save();refresh();}
+
+function exportData(){
+ const blob=new Blob([JSON.stringify(state.items,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);const a=document.createElement("a");
+ const d=new Date().toISOString().slice(0,10);
+ a.href=url;a.download=`equipamento-chui-montevideu-${d}.json`;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function app(){
+ document.getElementById("app").innerHTML=shell();
+ refresh();
+
+ document.getElementById("app").addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");if(!b)return;
+  const a=b.dataset.action,id=b.dataset.id;
+  if(a==="toggle"){setItems(state.items.map(i=>i.id===id?{...i,owned:!i.owned}:i));}
+  else if(a==="why"){const n=document.querySelector(`[data-note="${id}"]`);const w=b;if(n){n.classList.toggle("open");w.classList.toggle("open");}}
+  else if(a==="del"){state.confirmDel=id;renderList();}
+  else if(a==="del-yes"){state.confirmDel=null;setItems(state.items.filter(i=>i.id!==id));}
+  else if(a==="del-no"){state.confirmDel=null;renderList();}
+  else if(a==="cat"){state.cat=b.dataset.cat;renderNavs();renderList();}
+  else if(a==="status"){state.status=b.dataset.status;renderNavs();renderList();}
+  else if(a==="clear-search"){state.query="";document.getElementById("search").value="";document.querySelector('[data-action="clear-search"]').style.display="none";renderList();}
+  else if(a==="clear-filters"){state.cat="all";state.status="all";state.query="";document.getElementById("search").value="";renderNavs();renderList();document.querySelector('[data-action="clear-search"]').style.display="none";}
+  else if(a==="add-open"){state.adding=true;renderFooter();}
+  else if(a==="add-cancel"){state.adding=false;renderFooter();}
+  else if(a==="add-save"){
+   const name=document.getElementById("d-name").value.trim();if(!name)return;
+   const it={id:uid(),category:document.getElementById("d-cat").value,name,model:document.getElementById("d-model").value.trim()||"—",spec:"—",qty:Math.max(0,parseInt(document.getElementById("d-qty").value)||1),month:document.getElementById("d-month").value,price:Math.max(0,parseFloat(document.getElementById("d-price").value)||0),owned:false,notes:"Item adicionado por você.",verify:false};
+   state.adding=false;state.cat=it.category;setItems([...state.items,it]);
+  }
+  else if(a==="reset-open"){state.confirmReset=true;renderFooter();}
+  else if(a==="reset-no"){state.confirmReset=false;renderFooter();}
+  else if(a==="reset-yes"){state.confirmReset=false;state.cat="all";state.status="all";setItems(seed());}
+  else if(a==="export"){exportData();}
+  else if(a==="import"){document.getElementById("importFile").click();}
+ });
+
+ document.getElementById("app").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="search"){state.query=t.value;document.querySelector('[data-action="clear-search"]').style.display=t.value?"":"none";renderList();return;}
+  if(t.dataset&&t.dataset.field){
+   const id=t.dataset.id,field=t.dataset.field;
+   let v=field==="qty"?parseInt(t.value):parseFloat(t.value);if(isNaN(v)||v<0)v=0;
+   state.items=state.items.map(i=>i.id===id?{...i,[field]:v}:i);save();
+   const card=t.closest(".card");const it=state.items.find(i=>i.id===id);
+   if(card)card.querySelector(".line-total").textContent=brl(it.price*it.qty);
+   renderSummary();
+  }
+ });
+
+ document.getElementById("importFile").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+   try{const a=JSON.parse(r.result);
+    if(!Array.isArray(a))throw 0;
+    const clean=a.map(x=>({id:x.id||uid(),category:x.category||"documentos",name:x.name||"Item",model:x.model||"—",spec:x.spec||"—",qty:Number(x.qty)||0,month:x.month||"Dez",price:Number(x.price)||0,owned:!!x.owned,notes:x.notes||"",verify:!!x.verify}));
+    state.cat="all";state.status="all";state.query="";setItems(clean);
+   }catch(err){alert("Arquivo inválido. Selecione um backup exportado por este app.");}
+   e.target.value="";
+  };
+  r.readAsText(file);
+ });
+}
+
+app();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+ navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
