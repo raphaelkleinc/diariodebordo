@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#12332e">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--ink:#153e37;--ink2:#0f3a34;--sand:#e7e0cf;--paper:#f8f4ea;--paper2:#fffdf7;--accent:#d97514;--accent2:#b85f0d;--ok:#3a7a5c;--text:#22271e;--muted:#726a58;--warn:#b26a00;--danger:#b23a2e;--water:#2c6f8c;--line:#d9d0ba;}
 *{box-sizing:border-box;}
@@ -202,6 +204,13 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(
 .poi-name{font-weight:650;font-size:14px;}
 .poi-note{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45;}
 
+#map{height:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin:0 0 6px;background:#dbe3de;z-index:0;}
+.map-fallback{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;}
+.map-actions{margin-top:10px;}
+.stop-link{color:var(--accent2);font-size:12px;font-weight:600;text-decoration:underline;display:inline-flex;align-items:center;gap:4px;}
+.leaflet-popup-content{font-family:system-ui,-apple-system,sans-serif;font-size:12.5px;line-height:1.5;margin:10px 12px;}
+.leaflet-popup-content b{color:var(--ink);}
+.leaflet-container{font-family:system-ui,sans-serif;}
 @media (max-width:620px){
   .stats,.mstats{grid-template-columns:repeat(2,1fr);}
   .mstats{grid-template-columns:repeat(3,1fr);}
@@ -245,7 +254,7 @@ const GEAR_RAW=[
 ["dormida","Isolante térmico","Naturehike inflável (R~2)","R-value ~2, 400–600g",1,"Out",300,false,"O frio que rouba calor vem do chão. R2 sobra p/ verão. Kit de reparo incluso p/ o risco de furo.",false],
 ["dormida","Travesseiro inflável","Naturehike / Trekology","~60g",1,"Out",100,false,"Sono ruim por 6 dias vira fadiga acumulada. Alternativa R$0 é saco com roupas.",false],
 ["cozinha","Fogareiro","Fire Maple FMS-300T","Gás isobutano ~60g",1,"Nov",180,false,"Gás é rápido, mas cartucho pode faltar no Rocha. Compre com antecedência. Álcool é o backup.",false],
-["cozinha","Cartucho de gás","Isobutano 230g","230g",2,"Dez",55,false,"Leve 2 pela dificuldade de reposição. Não vai em transporte pressurizado — compra local.",false],
+["cozinha","Cartucho de gás","Isobutano 230g","230g",3,"Dez",55,false,"Ida e volta = ~12 dias de fogão. Leve 3 pela dificuldade de reposição no Rocha. Não vai em transporte pressurizado — compra local.",false],
 ["cozinha","Panela / cook set","Fire Maple 1L","0,75–1L com tampa",1,"Nov",180,false,"1L cobre refeição + água quente. Tampa que vira prato economiza peso.",false],
 ["cozinha","Filtro de água","Sawyer Squeeze","0,1 micron",1,"Nov",320,false,"CRÍTICO: os ~60km de ripio da Laguna Garzón não têm serviço. Filtro dá independência de fonte e reduz peso de água.",false],
 ["cozinha","Reservatório flexível","Bolsa 2–3L","2–3L",1,"Nov",150,false,"No trecho seco precisa de 4–5L totais. Reservatório + caramanholas cobrem.",false],
@@ -276,16 +285,16 @@ const GEAR_RAW=[
 ["seguranca","Apito de emergência","Pealess alto","—",1,"Nov",20,false,"Sinalização em emergência a custo irrisório.",false],
 ["seguranca","GPS dedicado (opcional)","Garmin eTrex / Edge","—",0,"Opc",800,false,"Celular cobre a navegação. Só se quiser redundância. Opcional — não soma se qtd 0.",false],
 ["higiene","Kit primeiros socorros","Compacto de trilha","Curativos, antisséptico, remédios",1,"Nov",120,false,"Solo = você é o primeiro socorro. Inclua o que trata assadura, corte e alergia.",false],
-["higiene","Protetor solar","FPS 50+ à prova d'água","FPS 50+",2,"Dez",40,false,"6h+/dia de exposição. Queimadura compromete a viagem. Reaplicar sempre.",false],
+["higiene","Protetor solar","FPS 50+ à prova d'água","FPS 50+",3,"Dez",40,false,"~12 dias, 6h+/dia de exposição. Queimadura compromete a viagem. Reaplicar sempre — 3 unidades para a ida e volta.",false],
 ["higiene","Repelente","Icaridina","—",1,"Dez",40,false,"Lagoas e mata costeira = mosquito ao entardecer.",false],
-["higiene","Creme antiassadura","Chamois cream","—",1,"Dez",60,false,"Prevenção de assadura é o que te mantém pedalando no dia 5. Aplicar todo dia.",false],
+["higiene","Creme antiassadura","Chamois cream","—",2,"Dez",60,false,"12 dias de selim: uma bisnaga não basta. Aplicar TODO dia — assadura é a lesão nº1 que tira o iniciante da estrada.",false],
 ["higiene","Kit higiene","Escova, sabonete biodegradável, toalha rápida","—",1,"Dez",100,false,"Sabonete biodegradável = Leave No Trace. Toalha de microfibra seca rápido.",false],
 ["higiene","Álcool gel / lenços","Gel + lenços","—",1,"Dez",30,false,"Higiene das mãos antes de comer sem água.",false],
 ["documentos","Documento de viagem","Passaporte OU RG válido","Dentro da validade",1,"Ago",0,false,"Fronteira do Chuí exige carimbo nos dois postos (saída BR + entrada UY). Sem ele, problema na volta.",true],
 ["documentos","Seguro viagem","Cobertura UY + esporte","Resgate/repatriação",1,"Dez",150,false,"Acidente solo sem seguro = risco financeiro alto. Ler a cláusula de prática esportiva.",false],
 ["documentos","Dinheiro","Pesos + cartão","—",1,"Dez",0,false,"Cidades pequenas nem sempre têm câmbio/ATM. Leve pesos.",false],
 ["documentos","Cópias de documentos","Física + nuvem","—",1,"Dez",0,false,"Redundância se perder os originais.",false],
-["documentos","Comida de trilha","Barras, gel, eletrólitos","Reposição",1,"Dez",150,false,"Reposição no trecho sem serviços. Eletrólitos previnem cãibra no calor.",false],
+["documentos","Comida de trilha","Barras, gel, eletrólitos","Reposição ida e volta",1,"Dez",300,false,"Ida e volta dobra a reserva calórica. Reposição nos trechos sem serviço. Eletrólitos previnem cãibra no calor — reforce antes de cada travessia do ripio.",false],
 ];
 const seedGear=()=>GEAR_RAW.map(r=>({id:uid(),category:r[0],name:r[1],model:r[2],spec:r[3],qty:r[4],month:r[5],price:r[6],owned:r[7],notes:r[8],verify:r[9]||false}));
 
@@ -323,16 +332,16 @@ const seedOrg=()=>ORG_RAW.map(r=>({id:uid(),group:r[0],title:r[1],deadline:r[2],
 
 // aprox. planning distances — confirme na sua ferramenta de rota (Komoot/OsmAnd)
 const STOPS=[
- {name:"Chuí",km:0,leg:"partida",tags:["front","serv"],note:"Fronteira. Carimbe nos DOIS postos (saída Brasil + entrada Uruguai) antes de seguir. Último grande centro para comprar cartucho de gás e trocar pesos.",danger:false},
- {name:"Santa Teresa",km:40,leg:"+40 km",tags:["camping","agua","atrativo"],note:"Parque Nacional com camping estruturado — boa primeira noite. Fortaleza histórica para visitar.",danger:false},
- {name:"Punta del Diablo",km:55,leg:"+15 km",tags:["camping","serv","agua"],note:"Vila de pescadores com muito camping e mercados. Ótimo ponto para reabastecer comida.",danger:false},
- {name:"Cabo Polonio / Valizas",km:95,leg:"+40 km",tags:["camping","atrativo"],note:"Cabo Polonio não tem energia elétrica nem estrada convencional (acesso por 4x4 na areia). Avalie se entra ou segue por Valizas. Água e serviços limitados.",danger:false},
- {name:"La Paloma",km:150,leg:"+55 km",tags:["serv","camping","agua"],note:"Cidade maior — ÚLTIMO reabastecimento robusto antes do trecho crítico. Encha TODA a água e comida aqui.",danger:false},
- {name:"Laguna Garzón (travessia)",km:190,leg:"+40 km",tags:["perigo","agua"],note:"⚠ Início dos ~60 km de ripio SEM serviços. Carregue 4–5 L de água. Travessia da laguna pela ponte circular. Não conte com nada entre aqui e José Ignacio.",danger:true},
- {name:"José Ignacio",km:210,leg:"+20 km",tags:["serv","agua"],note:"Fim do trecho seco. Vila charmosa e cara (alta temporada) — água e comida disponíveis, mas preços altos.",danger:true},
- {name:"Punta del Este",km:245,leg:"+35 km",tags:["serv","atrativo"],note:"Cidade grande, tudo disponível — bom para manutenção e loja de bike. Trânsito intenso no verão: atenção redobrada.",danger:false},
- {name:"Piriápolis",km:295,leg:"+50 km",tags:["camping","serv","agua"],note:"Balneário tranquilo com bom camping. Boa penúltima parada para chegar descansado.",danger:false},
- {name:"Montevidéu",km:390,leg:"+95 km",tags:["destino","serv"],note:"Chegada! Fim da rota. Etapa longa — planeje saída cedo de Piriápolis.",danger:false},
+ {name:"Chuí",km:0,leg:"partida",lat:-33.6971,lng:-53.4616,tags:["front","serv"],note:"Fronteira. Carimbe nos DOIS postos (saída Brasil + entrada Uruguai) antes de seguir. Último grande centro para comprar cartucho de gás e trocar pesos. Na VOLTA, o carimbo se inverte — não pule.",danger:false},
+ {name:"Santa Teresa",km:40,leg:"+40 km",lat:-33.9769,lng:-53.5480,tags:["camping","agua","atrativo"],note:"Parque Nacional com camping estruturado — boa primeira noite. Fortaleza histórica para visitar.",danger:false},
+ {name:"Punta del Diablo",km:55,leg:"+15 km",lat:-34.0483,lng:-53.5426,tags:["camping","serv","agua"],note:"Vila de pescadores com muito camping e mercados. Ótimo ponto para reabastecer comida.",danger:false},
+ {name:"Cabo Polonio / Valizas",km:95,leg:"+40 km",lat:-34.4028,lng:-53.7783,tags:["camping","atrativo"],note:"Cabo Polonio não tem energia elétrica nem estrada convencional (acesso por 4x4 na areia). Avalie se entra ou segue por Valizas. Água e serviços limitados.",danger:false},
+ {name:"La Paloma",km:150,leg:"+55 km",lat:-34.6560,lng:-54.1650,tags:["serv","camping","agua"],note:"Cidade maior — ÚLTIMO reabastecimento robusto antes do trecho crítico. Encha TODA a água e comida aqui, na IDA e na VOLTA.",danger:false},
+ {name:"Laguna Garzón (travessia)",km:190,leg:"+40 km",lat:-34.8021,lng:-54.5850,tags:["perigo","agua"],note:"⚠ Início dos ~60 km de ripio SEM serviços — cruzado nos DOIS sentidos. Carregue 4–5 L de água. Travessia pela ponte circular. Não conte com nada entre aqui e José Ignacio.",danger:true},
+ {name:"José Ignacio",km:210,leg:"+20 km",lat:-34.8390,lng:-54.6370,tags:["serv","agua"],note:"Fim do trecho seco (na ida) / início dele (na volta). Vila charmosa e cara na alta temporada — água e comida disponíveis, preços altos.",danger:true},
+ {name:"Punta del Este",km:245,leg:"+35 km",lat:-34.9600,lng:-54.9500,tags:["serv","atrativo"],note:"Cidade grande, tudo disponível — bom para manutenção e loja de bike. Trânsito intenso no verão: atenção redobrada.",danger:false},
+ {name:"Piriápolis",km:295,leg:"+50 km",lat:-34.8660,lng:-55.2760,tags:["camping","serv","agua"],note:"Balneário tranquilo com bom camping. Boa parada antes/depois da etapa longa de Montevidéu.",danger:false},
+ {name:"Montevidéu",km:390,leg:"+95 km",lat:-34.9011,lng:-56.1645,tags:["destino","serv"],note:"Meia-volta! Etapa longa (~95 km) — planeje saída cedo. Ponto ideal para 1 dia de descanso antes de encarar a volta.",danger:false},
 ];
 const TAGLABEL={front:"fronteira",camping:"camping",agua:"água",serv:"serviços",perigo:"sem serviços",destino:"destino",atrativo:"atrativo"};
 
@@ -372,7 +381,7 @@ function shell(){
   <div class="brand-in">
    <div class="eyebrow">Caderno de expedição · gravel solo</div>
    <h1>Chuí <span class="arrow">→</span> Montevidéu</h1>
-   <p class="sub">Ruta 10 costeira · ~6 dias · partida em janeiro</p>
+   <p class="sub">Ruta 10 costeira · ida e volta · ~12 dias · partida em janeiro</p>
    <div class="offline-badge"><span class="dot"></span> Funciona offline · dados salvos neste aparelho</div>
   </div>
  </header>
@@ -380,7 +389,7 @@ function shell(){
  <main id="view"></main>`;
 }
 function renderTabs(){
- const t=[["gear","Equipamento"],["org","Organização"],["map","Mapa & Rota"]];
+ const t=[["gear","Equipamento"],["org","Organização"],["map","Itinerário"]];
  document.getElementById("tabs").innerHTML=t.map(([k,l])=>`<button class="tab${state.view===k?" on":""}" data-action="view" data-view="${k}">${l}</button>`).join("");
 }
 function renderView(){
@@ -528,34 +537,59 @@ function orgFooter(){
 
 /* ---------- MAP ---------- */
 function renderMap(){
- const total=STOPS[STOPS.length-1].km, days=6, avg=Math.round(total/days);
+ const oneway=STOPS[STOPS.length-1].km, total=oneway*2, days=12, avg=Math.round(oneway/6);
  document.getElementById("view").innerHTML=`
   <div class="view-hero">
-   <h2>Mapa de trecho & pontos de interesse</h2>
-   <p>Visão estratégica da rota. A navegação de verdade na estrada é do OsmAnd/Maps.me (offline) — este mapa te mostra o quadro geral: distâncias, onde há serviço e, principalmente, <b>onde não há</b>.</p>
+   <h2>Itinerário & pontos de interesse</h2>
+   <p>Ida e volta pela mesma costa. O mapa dá o quadro geral (precisa de conexão); a navegação real na estrada é do OsmAnd/Maps.me offline. O ripio da Laguna Garzón é cruzado <b>duas vezes</b> — reforce água na ida E na volta.</p>
   </div>
   <section class="mstats">
-   <div class="stat"><span class="stat-k">Distância total (aprox.)</span><span class="stat-v">${total} km</span></div>
-   <div class="stat"><span class="stat-k">Dias (piso)</span><span class="stat-v">${days}</span></div>
+   <div class="stat"><span class="stat-k">Ida e volta (aprox.)</span><span class="stat-v">${total} km</span></div>
+   <div class="stat"><span class="stat-k">Dias pedalando</span><span class="stat-v">~${days}</span></div>
    <div class="stat"><span class="stat-k">Média/dia</span><span class="stat-v">${avg} km</span></div>
   </section>
+  <div class="rmap" style="padding-bottom:2px"><div id="map"><div class="map-fallback">Carregando o mapa… se não aparecer, você está sem conexão — use o itinerário abaixo.</div></div></div>
   <div class="legend">
    <span class="pill camping">camping</span><span class="pill agua">água</span><span class="pill serv">serviços</span><span class="pill front">fronteira</span><span class="pill perigo">sem serviços</span><span class="pill destino">destino</span>
   </div>
   <div class="rmap">${STOPS.map(stopHTML).join("")}</div>
   <div class="poi-sec"><h3>Meus pontos de interesse</h3><div id="poilist"></div><div class="footer-actions" id="pfooter"></div></div>
-  <p class="disclaimer">Distâncias são aproximadas para planejamento — confirme na sua ferramenta de rota. Adicione seus pontos: campings reservados, lojas de bike, contatos.</p>`;
- poiList();poiFooter();
+  <p class="disclaimer">Distâncias e coordenadas são aproximadas para planejamento — confirme na sua ferramenta de rota. O ripio sem serviços é cruzado nos dois sentidos.</p>`;
+ poiList();poiFooter();initMap();
 }
 function stopHTML(s,i){
  const cls=(i===0?"first":i===STOPS.length-1?"last":"")+(s.danger?" leg-danger":"");
  const open=state.openStop===i;
+ const gmaps="https://www.google.com/maps/search/?api=1&query="+s.lat+","+s.lng;
  return `<div class="stop ${cls}"><div class="node"></div>
   <div class="stop-card${open?" open":""}" data-action="stop" data-i="${i}">
    <div class="stop-hd"><span class="stop-name">${esc(s.name)}</span><span class="stop-km">${s.km} km <span class="stop-leg">(${esc(s.leg)})</span></span></div>
    <div class="stop-tags">${s.tags.map(t=>`<span class="pill ${t}">${TAGLABEL[t]||t}</span>`).join("")}</div>
-   <div class="stop-note${s.danger?" danger":""}">${esc(s.note)}</div>
+   <div class="stop-note${s.danger?" danger":""}">${esc(s.note)}<div class="map-actions"><a class="stop-link" href="${gmaps}" target="_blank" rel="noopener" onclick="event.stopPropagation()">abrir no mapa ↗</a></div></div>
   </div></div>`;
+}
+let _map=null;
+function initMap(){
+ const el=document.getElementById("map");
+ if(!el)return;
+ if(typeof L==="undefined"){el.innerHTML='<div class="map-fallback">Mapa interativo indisponível sem conexão. Consulte o itinerário abaixo ou toque em “abrir no mapa” em cada parada quando tiver sinal.</div>';return;}
+ el.innerHTML="";
+ try{
+  if(_map){_map.remove();_map=null;}
+  const map=L.map(el,{scrollWheelZoom:false});_map=map;
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap"}).addTo(map);
+  const pts=STOPS.map(s=>[s.lat,s.lng]);
+  L.polyline(pts.slice(0,5),{color:"#d97514",weight:4}).addTo(map);
+  L.polyline(pts.slice(4,7),{color:"#b23a2e",weight:5,dashArray:"6,8"}).addTo(map);
+  L.polyline(pts.slice(6),{color:"#d97514",weight:4}).addTo(map);
+  STOPS.forEach((s,i)=>{
+   const color=s.danger?"#b23a2e":(i===0||i===STOPS.length-1?"#153e37":"#2c6f8c");
+   L.circleMarker([s.lat,s.lng],{radius:7,color:"#fff",weight:2,fillColor:color,fillOpacity:1}).addTo(map)
+    .bindPopup("<b>"+esc(s.name)+"</b><br>"+s.km+" km (ida)<br>"+esc(s.note));
+  });
+  map.fitBounds(pts,{padding:[28,28]});
+  setTimeout(()=>{try{map.invalidateSize();}catch(e){}},250);
+ }catch(e){el.innerHTML='<div class="map-fallback">Não foi possível carregar o mapa agora. Use o itinerário abaixo.</div>';}
 }
 function poiList(){
  const el=document.getElementById("poilist");
