@@ -180,6 +180,18 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(
 
 /* ===== MAP ===== */
 .mstats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:14px 0 0;}
+.planner{margin:14px 16px 0;background:var(--paper2);border:1px solid var(--line);border-radius:14px;padding:14px;}
+.planner-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink);margin-bottom:12px;}
+.planner-inputs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.pfield{display:flex;flex-direction:column;gap:4px;}
+.pfield span{font-size:10px;color:var(--muted);letter-spacing:.02em;line-height:1.3;min-height:24px;}
+.pfield input{padding:8px 6px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:15px;font-family:ui-monospace,monospace;font-weight:700;background:var(--paper);color:var(--text);outline:none;width:100%;}
+.pfield input:focus{border-color:var(--accent);}
+.planner-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+.pout{text-align:center;}
+.pout-v{display:block;font-family:ui-monospace,monospace;font-size:22px;font-weight:800;color:var(--accent2);letter-spacing:-.02em;}
+.pout-k{display:block;font-size:10.5px;color:var(--muted);margin-top:2px;}
+.planner-note{margin-top:12px;font-size:12px;line-height:1.5;color:#4a4636;background:#f3eede;border-left:2px solid var(--accent);padding:8px 10px;border-radius:0 6px 6px 0;}
 .rmap{padding:16px 16px 4px;}
 .legend{display:flex;flex-wrap:wrap;gap:7px;padding:0 18px 12px;}
 .pill{font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
@@ -225,6 +237,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(
 @media (max-width:620px){
   .stats,.mstats{grid-template-columns:repeat(2,1fr);}
   .mstats{grid-template-columns:repeat(3,1fr);}
+  .planner-inputs{grid-template-columns:repeat(2,1fr);}
   .months{grid-template-columns:repeat(3,1fr);}
   .card{flex-wrap:wrap;}
   .card-right{width:100%;min-width:0;flex-direction:row;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;}
@@ -240,7 +253,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 <script>
 "use strict";
-const GEAR_KEY="expedicao_gear_v2", ORG_KEY="expedicao_org_v1", POI_KEY="expedicao_poi_v1";
+const GEAR_KEY="expedicao_gear_v2", ORG_KEY="expedicao_org_v1", POI_KEY="expedicao_poi_v1", PLAN_KEY="expedicao_plan_v1";
 const CATS=[
  {id:"carga",n:"01",label:"Carga & Bikepacking"},{id:"dormida",n:"02",label:"Sistema de Dormida"},
  {id:"cozinha",n:"03",label:"Cozinha & Hidratação"},{id:"ferramentas",n:"04",label:"Ferramentas & Manutenção"},
@@ -410,6 +423,13 @@ function startCloud(){
   bindCloud("gear", GEAR_KEY, v=>state.items=v, ()=>state.items, normGear);
   bindCloud("org",  ORG_KEY,  v=>state.targets=v, ()=>state.targets, normOrg);
   bindCloud("pois", POI_KEY,  v=>state.pois=v, ()=>state.pois, normPoi);
+  dbref.child("plan").on("value", s=>{
+    const raw=s.val();
+    if(raw==null){ dbref.child("plan").set(state.plan); setSync("ok"); return; }
+    const incoming=normPlan(raw);
+    if(JSON.stringify(incoming)===JSON.stringify(state.plan)){ setSync("ok"); return; }
+    state.plan=incoming; lsSet(PLAN_KEY,incoming); setSync("ok"); if(state.view==="map")renderMap();
+  }, ()=>setSync("err"));
 }
 function bindCloud(node, lsKey, assign, getCurrent, norm){
   dbref.child(node).on("value", s=>{
@@ -431,10 +451,12 @@ let state={
  items:loadArr(GEAR_KEY,seedGear), cat:"all", status:"all", query:"", adding:false, confirmDel:null, confirmReset:false,
  targets:loadArr(ORG_KEY,seedOrg), orgAdding:false, orgDel:null,
  pois:(lsGet(POI_KEY)||[]).map(x=>({...x,id:x.id||uid()})), poiAdding:false, poiDel:null, openStop:null,
+ plan:normPlan(lsGet(PLAN_KEY)||{totalKm:780,avg:120,rest:0,speed:20}),
 };
 function saveGear(){lsSet(GEAR_KEY,state.items);cloudPush("gear",state.items);}
 function saveOrg(){lsSet(ORG_KEY,state.targets);cloudPush("org",state.targets);}
 function savePoi(){lsSet(POI_KEY,state.pois);cloudPush("pois",state.pois);}
+function savePlan(){lsSet(PLAN_KEY,state.plan);cloudPush("plan",state.plan);}
 
 /* ---------- shell ---------- */
 function shell(){
@@ -445,7 +467,7 @@ function shell(){
   <div class="brand-in">
    <div class="eyebrow">Caderno de expedição · gravel solo</div>
    <h1>Chuí <span class="arrow">→</span> Montevidéu</h1>
-   <p class="sub">Ruta 10 costeira · ida e volta · ~12 dias · partida em janeiro</p>
+   <p class="sub">Ruta 10 costeira · ida e volta · partida em janeiro</p>
    <div class="brand-foot">
     <span class="sync" id="sync"><span class="sdot"></span><span class="stxt">iniciando…</span></span>
     <button class="pdf-btn" data-action="pdf">${ICON.pdf} Gerar PDF</button>
@@ -604,16 +626,25 @@ function orgFooter(){
 
 /* ---------- MAP ---------- */
 function renderMap(){
- const oneway=STOPS[STOPS.length-1].km, total=oneway*2, days=12, avg=Math.round(oneway/6);
  document.getElementById("view").innerHTML=`
   <div class="view-hero">
-   <h2>Itinerário & pontos de interesse</h2>
-   <p>Ida e volta pela mesma costa. O mapa dá o quadro geral (precisa de conexão); a navegação real na estrada é do OsmAnd/Maps.me offline. O ripio da Laguna Garzón é cruzado <b>duas vezes</b> — reforce água na ida E na volta.</p>
+   <h2>Itinerário & planejador de ritmo</h2>
+   <p>Ajuste a média diária e veja quantos dias a expedição leva. O ripio da Laguna Garzón é cruzado <b>duas vezes</b>. A navegação real na estrada é do OsmAnd/Maps.me offline.</p>
   </div>
-  <section class="mstats">
-   <div class="stat"><span class="stat-k">Ida e volta (aprox.)</span><span class="stat-v">${total} km</span></div>
-   <div class="stat"><span class="stat-k">Dias pedalando</span><span class="stat-v">~${days}</span></div>
-   <div class="stat"><span class="stat-k">Média/dia</span><span class="stat-v">${avg} km</span></div>
+  <section class="planner">
+   <div class="planner-title">Planejador de ritmo</div>
+   <div class="planner-inputs">
+    <label class="pfield"><span>Ida e volta (km)</span><input id="pl-total" type="number" min="1" inputmode="numeric" value="${state.plan.totalKm}"></label>
+    <label class="pfield"><span>Média/dia (km)</span><input id="pl-avg" type="number" min="1" inputmode="numeric" value="${state.plan.avg}"></label>
+    <label class="pfield"><span>Veloc. média (km/h)</span><input id="pl-speed" type="number" min="1" inputmode="numeric" value="${state.plan.speed}"></label>
+    <label class="pfield"><span>Dias de descanso</span><input id="pl-rest" type="number" min="0" inputmode="numeric" value="${state.plan.rest}"></label>
+   </div>
+   <div class="planner-out">
+    <div class="pout"><span class="pout-v" id="po-pedal"></span><span class="pout-k">dias pedalando</span></div>
+    <div class="pout"><span class="pout-v" id="po-total"></span><span class="pout-k">duração total</span></div>
+    <div class="pout"><span class="pout-v" id="po-hours"></span><span class="pout-k">selim/dia</span></div>
+   </div>
+   <div class="planner-note" id="po-note"></div>
   </section>
   <div class="rmap" style="padding-bottom:2px"><div id="map"><div class="map-fallback">Carregando o mapa… se não aparecer, você está sem conexão — use o itinerário abaixo.</div></div></div>
   <div class="legend">
@@ -621,8 +652,23 @@ function renderMap(){
   </div>
   <div class="rmap">${STOPS.map(stopHTML).join("")}</div>
   <div class="poi-sec"><h3>Meus pontos de interesse</h3><div id="poilist"></div><div class="footer-actions" id="pfooter"></div></div>
-  <p class="disclaimer">Distâncias e coordenadas são aproximadas para planejamento — confirme na sua ferramenta de rota. O ripio sem serviços é cruzado nos dois sentidos.</p>`;
- poiList();poiFooter();initMap();
+  <p class="disclaimer">Distâncias e coordenadas são aproximadas — confirme na sua ferramenta de rota. O ripio sem serviços é cruzado nos dois sentidos.</p>`;
+ poiList();poiFooter();initMap();updatePlanOut();
+}
+function updatePlanOut(){
+ const c=planCalc(state.plan);
+ const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+ set("po-pedal","~"+c.diasPedal);
+ set("po-total","~"+c.duracao);
+ set("po-hours","~"+c.horas.toFixed(1)+" h");
+ const note=document.getElementById("po-note");
+ if(note){
+  let msg;
+  if(c.horas>6.5) msg="Mais de 6h30 de selim por dia, carregado, é puxado — considere reduzir a média ou dividir a etapa. Lembre da tua janela fresca (5h–10h da manhã).";
+  else if(state.plan.avg>=100) msg="Ritmo de atleta. No dia do ripio a média cai — planeje pela pior superfície do dia, não pela melhor. A folga vira descanso ou contingência.";
+  else msg="Ritmo confortável, com boa margem de recuperação para dias consecutivos.";
+  note.textContent=msg;
+ }
 }
 function stopHTML(s,i){
  const cls=(i===0?"first":i===STOPS.length-1?"last":"")+(s.danger?" leg-danger":"");
@@ -674,7 +720,7 @@ function poiFooter(){
 
 /* ---------- export / import ---------- */
 function exportData(){
- const bundle={version:3,exportedAt:new Date().toISOString(),gear:state.items,targets:state.targets,pois:state.pois};
+ const bundle={version:4,exportedAt:new Date().toISOString(),gear:state.items,targets:state.targets,pois:state.pois,plan:state.plan};
  const blob=new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date().toISOString().slice(0,10);
  a.href=url;a.download=`expedicao-chui-montevideu-${d}.json`;a.click();
@@ -701,7 +747,7 @@ function generatePDF(){
  let y=116;
  doc.setTextColor(34,39,30);doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Resumo",M,y);
  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(60,60,60);y+=17;
- [["Falta comprar",brl(t.toBuy)],["Já adquirido (valor)",brl(t.ownedVal)],["Investimento total",brl(t.grand)],["Itens adquiridos",t.ownedCount+"/"+t.totalCount],["Metas concluídas",state.targets.filter(x=>x.done).length+"/"+state.targets.length]].forEach(r=>{doc.text(S("•  "+r[0]+": "+r[1]),M,y);y+=15;});
+ [["Falta comprar",brl(t.toBuy)],["Já adquirido (valor)",brl(t.ownedVal)],["Investimento total",brl(t.grand)],["Itens adquiridos",t.ownedCount+"/"+t.totalCount],["Metas concluídas",state.targets.filter(x=>x.done).length+"/"+state.targets.length],["Ritmo",state.plan.avg+" km/dia -> ~"+planCalc(state.plan).diasPedal+" dias pedalando (+"+state.plan.rest+" descanso)"]].forEach(r=>{doc.text(S("•  "+r[0]+": "+r[1]),M,y);y+=15;});
  const heading=(txt)=>{
   y=(doc.lastAutoTable?doc.lastAutoTable.finalY+26:y+10);
   if(y>pageH-90){doc.addPage();y=54;}
@@ -758,12 +804,15 @@ function importData(obj){
   if(Array.isArray(obj.gear)){state.items=normGear(obj.gear);saveGear();}
   if(Array.isArray(obj.targets)){state.targets=obj.targets.map(t=>({id:t.id||uid(),group:t.group||"logistica",title:t.title||"Meta",deadline:t.deadline||"Dez",detail:t.detail||"",done:!!t.done}));saveOrg();}
   if(Array.isArray(obj.pois)){state.pois=obj.pois.map(p=>({id:p.id||uid(),name:p.name||"Ponto",where:p.where||"",note:p.note||""}));savePoi();}
+  if(obj.plan){state.plan=normPlan(obj.plan);savePlan();}
  } else throw 0;
  state.cat="all";state.status="all";state.query="";renderView();
 }
 function normGear(a){return a.map(x=>({id:x.id||uid(),category:x.category||"documentos",name:x.name||"Item",model:x.model||"—",spec:x.spec||"—",qty:Number(x.qty)||0,month:x.month||"Dez",price:Number(x.price)||0,owned:!!x.owned,notes:x.notes||"",verify:!!x.verify}));}
 function normOrg(a){return a.map(t=>({id:t.id||uid(),group:t.group||"logistica",title:t.title||"Meta",deadline:t.deadline||"Dez",detail:t.detail||"",done:!!t.done}));}
 function normPoi(a){return a.map(p=>({id:p.id||uid(),name:p.name||"Ponto",where:p.where||"",note:p.note||""}));}
+function normPlan(o){o=o||{};return{totalKm:Math.max(1,Math.round(Number(o.totalKm)||780)),avg:Math.max(1,Math.round(Number(o.avg)||120)),rest:Math.max(0,Math.round(Number(o.rest)||0)),speed:Math.max(1,Number(o.speed)||20)};}
+function planCalc(p){const diasPedal=Math.ceil(p.totalKm/p.avg);return{diasPedal:diasPedal,duracao:diasPedal+p.rest,horas:p.avg/p.speed};}
 
 /* ---------- boot + events ---------- */
 function app(){
@@ -815,6 +864,11 @@ function app(){
  document.getElementById("app").addEventListener("input",e=>{
   const t=e.target;
   if(t.id==="search"){state.query=t.value;const c=document.querySelector('[data-action="clear-search"]');if(c)c.style.display=t.value?"":"none";gearList();return;}
+  if(t.id&&t.id.indexOf("pl-")===0){
+   const rd=(id,min)=>{const el=document.getElementById(id);let v=parseFloat(el.value);if(isNaN(v)||v<min)v=min;return v;};
+   state.plan={totalKm:Math.round(rd("pl-total",1)),avg:Math.round(rd("pl-avg",1)),speed:rd("pl-speed",1),rest:Math.round(rd("pl-rest",0))};
+   updatePlanOut();savePlan();return;
+  }
   if(t.dataset&&t.dataset.field){
    const id=t.dataset.id,field=t.dataset.field;let val=field==="qty"?parseInt(t.value):parseFloat(t.value);if(isNaN(val)||val<0)val=0;
    state.items=state.items.map(i=>i.id===id?{...i,[field]:val}:i);saveGear();
