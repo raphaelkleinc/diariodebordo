@@ -27,8 +27,8 @@
   --f-rotulo:"IM Fell English SC","Cormorant Garamond",Garamond,serif;
   color-scheme:light;
 }
-html{background:var(--vinho)}
-body{background:var(--vinho);color:var(--tinta);font-family:var(--f-texto);font-size:19px;line-height:1.45;
+html{background:var(--papel)}
+body{background:var(--papel);color:var(--tinta);font-family:var(--f-texto);font-size:19px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
 .folha{max-width:620px;margin:0 auto;padding-block:56px 24px;display:flex;flex-direction:column;gap:56px}
 
@@ -62,7 +62,7 @@ h2::after{content:"";flex:1;border-bottom:1px solid var(--fio);transform:transla
 .dica{font-size:14px;font-style:italic;opacity:.7}
 
 /* Serviço de Quarto */
-#quarto{background:var(--vinho);color:var(--rosa);margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));min-height:100vh;
+#quarto{background:var(--vinho);color:var(--rosa);margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));
   padding-block:64px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   background-image:radial-gradient(ellipse at 50% 0%,var(--vinho-2),var(--vinho) 70%)}
 #quarto .folha{padding-block:0;gap:40px}
@@ -97,9 +97,31 @@ textarea{font:inherit;font-size:17px;background:var(--papel-2);border:1px solid 
 .acoes button{background:none;color:var(--tinta)}
 .ok{font-style:italic;color:var(--tinta-suave);font-size:15px;min-height:1em}
 pre.texto{white-space:pre-wrap;font-family:var(--f-texto);font-size:16px;background:var(--papel-2);padding:10px;margin:0;user-select:all}
+.rodape{display:none!important}
+.desce{display:block;text-align:center;font-family:var(--f-rotulo);letter-spacing:.12em;font-size:15px;color:var(--rosa);text-decoration:none;border:1px solid #8A4A40;padding:10px 16px;border-radius:2px;align-self:center}
 </style>
 
-<main hidden>
+<section id="quarto" aria-label="Serviço de Quarto">
+  <div class="folha">
+    <header>
+      <div class="sub">Somente para a cliente da casa</div>
+      <h1 class="marca">Serviço de Quarto</h1>
+      <p class="regras">Servido depois do último call, ou antes dele, se a pauta permitir. Nada é cobrado e tudo pode ser repetido.</p>
+    </header>
+    <section>
+      <h2>Massagens</h2>
+      <ul class="lista" data-sec="Massagens"></ul>
+    </section>
+    <section>
+      <h2>Explorando o Corpo</h2>
+      <ul class="lista" data-sec="Explorando o Corpo"></ul>
+    </section>
+    <p class="regras">O pedido pode ser personalizado com os itens acima. Combine quantos quiser e deixe os detalhes nas observações.</p>
+      <a class="desce" href="#casa">Cardápio da casa</a>
+  </div>
+</section>
+
+<main id="casa">
   <div class="folha">
     <header>
       <div class="sub">Café &amp; Cozinha · Est. 2026</div>
@@ -141,24 +163,6 @@ pre.texto{white-space:pre-wrap;font-family:var(--f-texto);font-size:16px;backgro
   </div>
 </main>
 
-<section id="quarto" aria-label="Serviço de Quarto">
-  <div class="folha">
-    <header>
-      <div class="sub">Somente para a cliente da casa</div>
-      <h1 class="marca">Serviço de Quarto</h1>
-      <p class="regras">Servido depois do último call, ou antes dele, se a pauta permitir. Nada é cobrado e tudo pode ser repetido.</p>
-    </header>
-    <section>
-      <h2>Massagens</h2>
-      <ul class="lista" data-sec="Massagens"></ul>
-    </section>
-    <section>
-      <h2>Explorando o Corpo</h2>
-      <ul class="lista" data-sec="Explorando o Corpo"></ul>
-    </section>
-    <p class="regras">O pedido pode ser personalizado com os itens acima. Combine quantos quiser e deixe os detalhes nas observações.</p>
-  </div>
-</section>
 
 <div class="barra" id="barra" hidden>
   <div class="barra-in">
