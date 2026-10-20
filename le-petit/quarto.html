@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>Serviço de Quarto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Layout: uma folha de papel estreita, centrada, lida de cima a baixo como cardápio impresso; o plano secreto é uma segunda folha que se abre embaixo do lacre */
+:root{
+  --papel:#EDE4D3;
+  --papel-2:#E4D9C4;
+  --tinta:#3B4528;
+  --tinta-suave:#6B7256;
+  --fio:#B9AE94;
+  --vinho:#4A1517;
+  --vinho-2:#5E1E1E;
+  --brasa:#D9825B;
+  --rosa:#F0C9B0;
+  --f-gotica:"UnifrakturMaguntia","Old English Text MT",serif;
+  --f-texto:"Cormorant Garamond",Garamond,"Times New Roman",serif;
+  --f-rotulo:"IM Fell English SC","Cormorant Garamond",Garamond,serif;
+  color-scheme:light;
+}
+html{background:var(--vinho)}
+body{background:var(--vinho);color:var(--tinta);font-family:var(--f-texto);font-size:19px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+.folha{max-width:620px;margin:0 auto;padding-block:56px 24px;display:flex;flex-direction:column;gap:56px}
+
+header{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.marca{font-family:var(--f-gotica);font-weight:400;font-size:clamp(46px,11vw,76px);line-height:1;margin:0;text-wrap:balance}
+.sub{font-family:var(--f-rotulo);letter-spacing:.14em;font-size:15px;color:var(--tinta-suave)}
+.orn{width:120px;height:14px;color:var(--fio)}
+.aviso{display:grid;grid-template-columns:1fr;gap:4px;font-size:17px;margin-top:6px}
+.aviso em{color:var(--tinta-suave)}
+
+section{display:flex;flex-direction:column;gap:20px}
+h2{font-family:var(--f-gotica);font-weight:400;font-size:34px;margin:0;display:flex;align-items:baseline;gap:14px}
+h2::after{content:"";flex:1;border-bottom:1px solid var(--fio);transform:translateY(-6px)}
+.lista{display:flex;flex-direction:column;gap:18px;margin:0;padding:0;list-style:none}
+.prato{display:grid;grid-template-columns:1fr auto;column-gap:16px;row-gap:2px;align-items:baseline}
+.nome{font-weight:600;font-size:20px;min-width:0}
+.preco{font-family:var(--f-rotulo);font-size:15px;letter-spacing:.06em;color:var(--tinta-suave);white-space:nowrap;font-variant-numeric:tabular-nums}
+.desc{grid-column:1/2;font-style:italic;color:var(--tinta-suave);font-size:17px;min-width:0}
+.opc{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-family:var(--f-rotulo);font-size:14px;letter-spacing:.05em;background:none;border:1px solid #8A4A40;color:var(--rosa);padding:3px 11px;border-radius:2px;cursor:pointer}
+.chip.sel{background:var(--brasa);color:var(--vinho);border-color:var(--brasa)}
+.add{grid-column:2/3;grid-row:1/3;align-self:center;justify-self:end;font-family:var(--f-rotulo);font-size:14px;letter-spacing:.08em;background:none;border:1px solid var(--fio);color:var(--tinta);padding:2px 12px;border-radius:2px;cursor:pointer}
+.add:hover{background:var(--papel-2)}
+.add:focus-visible,button:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
+.add.on{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+
+.rodape{text-align:center;font-size:16px;color:var(--tinta-suave);display:flex;flex-direction:column;align-items:center;gap:18px}
+.lacre{width:74px;height:74px;border:none;background:none;padding:0;cursor:pointer;transition:transform .2s}
+.lacre:active{transform:scale(.94)}
+.lacre svg{width:100%;height:100%}
+.dica{font-size:14px;font-style:italic;opacity:.7}
+
+/* Serviço de Quarto */
+#quarto{background:var(--vinho);color:var(--rosa);margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));min-height:100vh;
+  padding-block:64px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:radial-gradient(ellipse at 50% 0%,var(--vinho-2),var(--vinho) 70%)}
+#quarto .folha{padding-block:0;gap:40px}
+#quarto .marca{color:var(--brasa)}
+#quarto .sub,#quarto .desc,#quarto .preco{color:#D7A88F}
+#quarto h2::after{border-color:#7A3A35}
+#quarto .add{border-color:#8A4A40;color:var(--rosa)}
+#quarto .add:hover{background:var(--vinho-2)}
+#quarto .add.on{background:var(--brasa);color:var(--vinho);border-color:var(--brasa)}
+#quarto .regras{font-style:italic;font-size:16px;text-align:center;color:#D7A88F;max-width:44ch;margin:0 auto}
+.abre{animation:abre .9s ease both}
+@keyframes abre{from{opacity:.0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.abre{animation:none}.lacre{transition:none}}
+
+/* Pedido */
+.barra{position:fixed;left:0;right:0;bottom:0;background:var(--tinta);color:var(--papel);
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));padding-top:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:20}
+.barra-in{max-width:620px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.barra b{font-family:var(--f-rotulo);font-weight:400;letter-spacing:.1em}
+.barra button{font-family:var(--f-rotulo);letter-spacing:.08em;font-size:15px;background:var(--papel);color:var(--tinta);border:none;padding:8px 16px;border-radius:2px;cursor:pointer}
+.painel{position:fixed;inset:auto 0 0 0;background:var(--papel);border-top:1px solid var(--fio);z-index:30;max-height:80vh;overflow:auto;
+  padding-block:24px calc(24px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-shadow:0 -10px 30px rgba(40,30,10,.18)}
+.painel-in{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.painel h3{font-family:var(--f-gotica);font-weight:400;font-size:30px;margin:0}
+.itens{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.itens li{display:flex;justify-content:space-between;gap:12px}
+.itens button{background:none;border:none;color:var(--tinta-suave);font-family:var(--f-texto);font-size:16px;cursor:pointer;text-decoration:underline}
+textarea{font:inherit;font-size:17px;background:var(--papel-2);border:1px solid var(--fio);color:var(--tinta);padding:10px;border-radius:2px;resize:vertical;min-height:64px}
+.acoes{display:flex;flex-wrap:wrap;gap:10px}
+.acoes a,.acoes button{font-family:var(--f-rotulo);letter-spacing:.08em;font-size:15px;padding:10px 16px;border-radius:2px;cursor:pointer;text-decoration:none;border:1px solid var(--tinta)}
+.acoes a{background:var(--tinta);color:var(--papel)}
+.acoes button{background:none;color:var(--tinta)}
+.ok{font-style:italic;color:var(--tinta-suave);font-size:15px;min-height:1em}
+pre.texto{white-space:pre-wrap;font-family:var(--f-texto);font-size:16px;background:var(--papel-2);padding:10px;margin:0;user-select:all}
+</style>
+
+<main hidden>
+  <div class="folha">
+    <header>
+      <div class="sub">Café &amp; Cozinha · Est. 2026</div>
+      <h1 class="marca">Le Petit Home Office</h1>
+      <svg class="orn" viewBox="0 0 120 14" aria-hidden="true"><path d="M0 7h46M74 7h46" stroke="currentColor" fill="none"/><path d="M60 1l6 6-6 6-6-6z" fill="none" stroke="currentColor"/></svg>
+      <div class="aviso">
+        <span>Aberto de 21 a 23 de outubro</span>
+        <em>Horário de atendimento: verificar se seu homem está em casa</em>
+      </div>
+    </header>
+
+    <section>
+      <h2>Cafés</h2>
+      <ul class="lista" data-sec="Cafés"></ul>
+    </section>
+    <section>
+      <h2>Da Chapa</h2>
+      <ul class="lista" data-sec="Da Chapa"></ul>
+    </section>
+    <section>
+      <h2>Almoço do Dia</h2>
+      <ul class="lista" data-sec="Almoço do Dia"></ul>
+    </section>
+    <section>
+      <h2>Sobremesa</h2>
+      <ul class="lista" data-sec="Sobremesa"></ul>
+    </section>
+
+    <footer class="rodape">
+      <button class="lacre" id="lacre" aria-label="Lacre da casa">
+        <svg viewBox="0 0 80 80" aria-hidden="true">
+          <path d="M40 4c6 3 9 1 14 4s5 8 10 11 7 6 7 12-3 8-2 14-2 9-7 12-6 6-11 9-8 7-14 8-9-2-14-4-9-3-12-8-3-9-6-13-3-8-2-14 3-9 6-13 6-6 12-9S34 1 40 4z" fill="#3B4528"/>
+          <circle cx="40" cy="40" r="22" fill="none" stroke="#EDE4D3" stroke-opacity=".5"/>
+          <text x="40" y="51" text-anchor="middle" font-family="UnifrakturMaguntia,serif" font-size="30" fill="#EDE4D3">P</text>
+        </svg>
+      </button>
+      <div class="dica" id="dica">A casa guarda um menu que não está impresso.</div>
+    </footer>
+  </div>
+</main>
+
+<section id="quarto" aria-label="Serviço de Quarto">
+  <div class="folha">
+    <header>
+      <div class="sub">Somente para a cliente da casa</div>
+      <h1 class="marca">Serviço de Quarto</h1>
+      <p class="regras">Servido depois do último call, ou antes dele, se a pauta permitir. Nada é cobrado e tudo pode ser repetido.</p>
+    </header>
+    <section>
+      <h2>Massagens</h2>
+      <ul class="lista" data-sec="Massagens"></ul>
+    </section>
+    <section>
+      <h2>Explorando o Corpo</h2>
+      <ul class="lista" data-sec="Explorando o Corpo"></ul>
+    </section>
+    <p class="regras">O pedido pode ser personalizado com os itens acima. Combine quantos quiser e deixe os detalhes nas observações.</p>
+  </div>
+</section>
+
+<div class="barra" id="barra" hidden>
+  <div class="barra-in">
+    <b id="conta">1 item no pedido</b>
+    <button id="ver">Ver pedido</button>
+  </div>
+</div>
+
+<div class="painel" id="painel" hidden role="dialog" aria-label="Seu pedido">
+  <div class="painel-in">
+    <h3>Seu pedido</h3>
+    <ul class="itens" id="itens"></ul>
+    <label for="obs" class="sub">Observações para a cozinha</label>
+    <textarea id="obs" placeholder="Ex.: café sem açúcar, entregar às 15h"></textarea>
+    <div class="acoes">
+      <a id="whats" href="#" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
+      <button id="copiar">Copiar pedido</button>
+      <button id="fechar">Continuar escolhendo</button>
+    </div>
+    <div class="ok" id="ok"></div>
+    <pre class="texto" id="texto" hidden></pre>
+  </div>
+</div>
+
+<script>
+const menu={
+ "Cafés":[
+  ["Coado na V60","Grão moído na hora, passado devagar.",""],
+  ["Café com Leite","Meio a meio, leite quente batido.",""],
+  ["Mocha","Café, chocolate e leite.",""],
+  ["Pingado","Muito leite e um pingo de café.",""],
+  ["Cortado","Café forte com um pouco de leite.",""],
+  ["Macchiato","Café marcado com espuma de leite.",""],
+  ["Caramelo Salgado","Café com leite, calda de caramelo e flor de sal.",""],
+  ["Chocolate Quente","Cremoso, com canela por cima.",""],
+  ["Batida de Banana com Canela","Banana, leite gelado e canela.",""],
+  ["Chás","Consulte os sabores disponíveis.",""]
+ ],
+ "Da Chapa":[
+  ["Misto Quente","Presunto e queijo, bem dourado.",""],
+  ["Pão com Ovo","Pão de forma na manteiga, ovo e passas.",""],
+  ["Pão Caseiro com Abacate e Ovo","Abacate amassado, sal e pimenta.",""]
+ ],
+ "Almoço do Dia":[
+  ["Quarta, 21 · Risoto de Cogumelos","Arbóreo, cogumelos e parmesão.",""],
+  ["Quinta, 22 · Rigatoni com Figos","Com figos e parmesão.",""],
+  ["Sexta, 23 · Arroz Carreteiro de Churrasco","Com ovo de gema mole.",""]
+ ],
+ "Sobremesa":[
+  ["Pudim de Leite","Feito em casa, com calda de caramelo.",""]
+ ],
+ "Massagens":[
+  ["Pés","Óleo morno e nenhuma pressa.",""],
+  ["Relaxante","Música baixa e aromaterapia.",""],
+  ["Completa","Da cabeça aos pés.",""]
+ ],
+ "Explorando o Corpo":[
+  ["Língua","Você escolhe onde.",""],
+  ["Corpo no Corpo","Pele com pele, devagar.",""],
+  ["Brinquedos","Você escolhe onde.",""],
+  ["Apanhar","Você escolhe a intensidade.","","forca"],
+  ["Finalizar","Você escolhe onde.",""]
+ ]
+};
+const opts={parte:["Pescoço","Orelha","Costas","Barriga","Coxas","Onde você quiser"],forca:["Leve","Média","Forte"]};
+const pedido=[];
+function render(){
+  document.querySelectorAll(".lista").forEach(ul=>{
+    const sec=ul.dataset.sec;
+    (menu[sec]||[]).forEach(([n,d,p,o],i)=>{
+      let esc="";
+      const li=document.createElement("li");li.className="prato";
+      li.innerHTML=`<span class="nome"></span><span class="desc"></span><button class="add" type="button" id="add-${sec.replace(/\W/g,'')}-${i}">pedir</button>`;
+      li.querySelector(".nome").textContent=n;li.querySelector(".desc").textContent=d;
+      if(o){const box=document.createElement("div");box.className="opc";
+        opts[o].forEach(v=>{const c=document.createElement("button");c.type="button";c.className="chip";c.textContent=v;
+          c.onclick=()=>{esc=esc===v?"":v;box.querySelectorAll(".chip").forEach(z=>z.classList.toggle("sel",z.textContent===esc));
+            const it=pedido.find(x=>x.n===n);if(it){it.c=esc;atualiza()}};box.appendChild(c)});
+        li.appendChild(box)}
+      const b=li.querySelector(".add");
+      b.onclick=()=>{const k=pedido.findIndex(x=>x.n===n);
+        if(k>=0){pedido.splice(k,1);b.classList.remove("on");b.textContent="pedir"}
+        else{pedido.push({n,p,s:sec,b,c:esc});b.classList.add("on");b.textContent="no pedido"}
+        atualiza()};
+      ul.appendChild(li);
+    });
+  });
+}
+const $=id=>document.getElementById(id);
+function texto(){
+  const linhas=["Pedido para o Le Petit Home Office:",""];
+  pedido.forEach(x=>linhas.push(`• ${x.n}${x.c?` (${x.c})`:""}`));
+  const o=$("obs").value.trim(); if(o){linhas.push("","Obs.: "+o)}
+  return linhas.join("\n");
+}
+function atualiza(){
+  $("barra").hidden=pedido.length===0;
+  $("conta").textContent=pedido.length===1?"1 item no pedido":`${pedido.length} itens no pedido`;
+  const ul=$("itens");ul.innerHTML="";
+  pedido.forEach((x,i)=>{const li=document.createElement("li");const s=document.createElement("span");s.textContent=x.n+(x.c?` (${x.c})`:"");
+    const r=document.createElement("button");r.textContent="tirar";r.onclick=()=>{x.b.click()};li.append(s,r);ul.appendChild(li)});
+  $("whats").href="https://wa.me/?text="+encodeURIComponent(texto());
+  if(!pedido.length) $("painel").hidden=true;
+}
+$("obs").addEventListener("input",atualiza);
+$("ver").onclick=()=>{$("painel").hidden=false;$("ok").textContent=""};
+$("fechar").onclick=()=>{$("painel").hidden=true};
+$("copiar").onclick=()=>{const t=texto();
+  try{navigator.clipboard.writeText(t).then(()=>{$("ok").textContent="Pedido copiado. Agora é só mandar para ele."},()=>mostra(t))}catch(e){mostra(t)}};
+function mostra(t){const p=$("texto");p.hidden=false;p.textContent=t;$("ok").textContent="Selecione o texto abaixo e copie."}
+let toques=0;
+$("lacre").onclick=()=>{toques++;
+  const dica=$("dica");
+  if(toques===1)dica.textContent="Mais uma vez…";
+  else if(toques===2)dica.textContent="Só mais uma.";
+  else if(toques>=3){const q=$("quarto");if(q.hidden){q.hidden=false;q.classList.add("abre");dica.textContent="Desça. Com calma.";setTimeout(()=>q.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"}),150)}}
+};
+if(location.hash==="#quarto"){ $("quarto").hidden=false; setTimeout(()=>$("quarto").scrollIntoView(),60) }
+render();
+</script>
+
+</body>
+</html>
