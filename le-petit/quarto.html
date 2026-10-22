@@ -95,6 +95,9 @@ textarea{font:inherit;font-size:17px;background:var(--papel-2);border:1px solid 
 .acoes a,.acoes button{font-family:var(--f-rotulo);letter-spacing:.08em;font-size:15px;padding:10px 16px;border-radius:2px;cursor:pointer;text-decoration:none;border:1px solid var(--tinta)}
 .acoes a{background:var(--tinta);color:var(--papel)}
 .acoes button{background:none;color:var(--tinta)}
+.acoes button.prim{background:var(--tinta);color:var(--papel)}
+.acoes a.sec{background:none;color:var(--tinta)}
+.acoes button:disabled{opacity:.6;cursor:wait}
 .ok{font-style:italic;color:var(--tinta-suave);font-size:15px;min-height:1em}
 pre.texto{white-space:pre-wrap;font-family:var(--f-texto);font-size:16px;background:var(--papel-2);padding:10px;margin:0;user-select:all}
 .rodape{display:none!important}
@@ -175,7 +178,8 @@ pre.texto{white-space:pre-wrap;font-family:var(--f-texto);font-size:16px;backgro
     <label for="obs" class="sub">Observações para a cozinha</label>
     <textarea id="obs" placeholder="Ex.: café sem açúcar, entregar às 15h"></textarea>
     <div class="acoes">
-      <a id="whats" href="#" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
+      <button id="cozinha" class="prim">Enviar pedido</button>
+      <a id="whats" class="sec" href="#" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
       <button id="copiar">Copiar pedido</button>
       <button id="fechar">Continuar escolhendo</button>
     </div>
@@ -270,6 +274,23 @@ $("fechar").onclick=()=>{$("painel").hidden=true};
 $("copiar").onclick=()=>{const t=texto();
   try{navigator.clipboard.writeText(t).then(()=>{$("ok").textContent="Pedido copiado. Agora é só mandar para ele."},()=>mostra(t))}catch(e){mostra(t)}};
 function mostra(t){const p=$("texto");p.hidden=false;p.textContent=t;$("ok").textContent="Selecione o texto abaixo e copie."}
+const CANAL="lepetit-34f19274323047ea";
+$("cozinha").onclick=async()=>{
+  const b=$("cozinha");
+  const linhas=pedido.map(x=>`- ${x.n.replace(/^\w+, \d+ · /,"")}${x.c?` (${x.c})`:""}`);
+  const o=$("obs").value.trim(); if(o) linhas.push("Obs: "+o);
+  b.disabled=true;b.textContent="Enviando…";
+  try{
+    const r=await fetch("https://ntfy.sh/"+CANAL,{method:"POST",body:linhas.join("\n")});
+    if(!r.ok) throw 0;
+    $("ok").textContent="Pedido enviado. A cozinha já foi avisada.";
+    b.textContent="Pedido enviado";
+    setTimeout(()=>{b.disabled=false;b.textContent="Enviar pedido"},4000);
+  }catch(e){
+    $("ok").textContent="Não foi possível enviar agora. Use o WhatsApp abaixo.";
+    b.disabled=false;b.textContent="Enviar pedido";
+  }
+};
 let toques=0;
 $("lacre").onclick=()=>{toques++;
   const dica=$("dica");
